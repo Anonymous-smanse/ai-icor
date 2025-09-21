@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI Chat - Personal Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-box {
+            height: 400px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: #4facfe;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .typing-indicator {
+            align-self: flex-start;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 18px;
+            border-bottom-left-radius: 5px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        #user-input:focus {
+            border-color: #4facfe;
+        }
+
+        #send-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        #send-button:hover {
+            transform: scale(1.05);
+        }
+
+        #send-button:active {
+            transform: scale(0.95);
+        }
+
+        .api-key-section {
+            padding: 15px 20px;
+            background: #fff8e1;
+            border-bottom: 1px solid #ffeaa7;
+            display: flex;
+            gap: 10px;
+        }
+
+        #api-key-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #ffeaa7;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #save-api-key {
+            padding: 10px 15px;
+            background: #fdcb6e;
+            border: none;
+            border-radius: 20px;
+            color: #2d3436;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .warning {
+            padding: 10px 20px;
+            background: #ffebee;
+            color: #c62828;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+            
+            .chat-box {
+                height: calc(100vh - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DeepSeek AI Assistant</h1>
+            <p>Chat cerdas dengan AI yang powerful</p>
+        </div>
+        
+        <div class="warning">
+            ⚠️ Jangan bagikan API Key Anda kepada siapapun!
+        </div>
+        
+        <div class="api-key-section">
+            <input type="password" id="api-key-input" placeholder="Masukkan API Key DeepSeek Anda">
+            <button id="save-api-key">Simpan</button>
+        </div>
+        
+        <div class="chat-box" id="chat-box">
+            <div class="message ai-message">
+                Halo! Saya adalah asisten AI Anda. Silakan masukkan API Key DeepSeek Anda terlebih dahulu, lalu mulai percakapan!
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Ketik pesan Anda..." disabled>
+            <button id="send-button" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi
+        const API_URL = "https://api.deepseek.com/v1/chat/completions";
+        let API_KEY = "";
+
+        // Elemen DOM
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+        const apiKeyInput = document.getElementById("api-key-input");
+        const saveApiKeyButton = document.getElementById("save-api-key");
+
+        // Event Listeners
+        saveApiKeyButton.addEventListener("click", saveApiKey);
+        sendButton.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Simpan API Key
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                API_KEY = key;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                apiKeyInput.disabled = true;
+                saveApiKeyButton.disabled = true;
+                
+                appendMessage("ai", "API Key berhasil disimpan! Sekarang Anda bisa mulai chatting.");
+            } else {
+                alert("Silakan masukkan API Key yang valid.");
+            }
+        }
+
+        // Kirim pesan
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message || !API_KEY) return;
+
+            // Tambahkan pesan pengguna
+            appendMessage("user", message);
+            userInput.value = "";
+            
+            // Tampilkan indikator typing
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: "user", content: message }],
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+                
+                removeTypingIndicator();
+                appendMessage("ai", aiResponse);
+                
+            } catch (error) {
+                removeTypingIndicator();
+                appendMessage("ai", `Maaf, terjadi error: ${error.message}. Pastikan API Key valid dan koneksi internet stabil.`);
+            }
+        }
+
+        // Tambahkan pesan ke chat
+        function appendMessage(role, content) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${role}-message`;
+            messageDiv.textContent = content;
+            chatBox.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // Tampilkan indikator typing
+        function showTypingIndicator() {
+            const typingDiv = document.createElement("div");
+            typingDiv.className = "typing-indicator";
+            typingDiv.id = "typing-indicator";
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatBox.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        // Hapus indikator typing
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById("typing-indicator");
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Scroll ke bawah
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Auto-resize input
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html>
