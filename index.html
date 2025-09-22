@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot AI</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f9; }
+    #chatbox { width: 400px; margin: 20px auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    #messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+    .user { color: blue; margin: 5px 0; }
+    .bot { color: green; margin: 5px 0; }
+    input { width: 80%; padding: 8px; }
+    button { padding: 8px 12px; }
+  </style>
+</head>
+<body>
+  <div id="chatbox">
+    <h2>🤖 Chatbot AI</h2>
+    <div id="messages"></div>
+    <input type="text" id="input" placeholder="Ketik pesan..." />
+    <button onclick="sendMessage()">Kirim</button>
+  </div>
+
+  <script>
+    const API_URL = "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct";
+    const HF_TOKEN = "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"; // ganti dengan tokenmu
+
+    async function query(data) {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+      return await response.json();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("input");
+      const messages = document.getElementById("messages");
+      const userMessage = input.value;
+      if (!userMessage) return;
+
+      messages.innerHTML += `<div class="user">🧑: ${userMessage}</div>`;
+      input.value = "";
+
+      const result = await query({ inputs: userMessage });
+
+      let botMessage = "Maaf, aku bingung jawabnya 😅";
+      if (result && result[0]?.generated_text) {
+        botMessage = result[0].generated_text;
+      }
+
+      messages.innerHTML += `<div class="bot">🤖: ${botMessage}</div>`;
+      messages.scrollTop = messages.scrollHeight;
+    }
+  </script>
+</body>
+</html>
